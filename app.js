@@ -16,9 +16,4 @@ app.use('/users', AuthRoute);
 app.use('/users', passwordAuthMiddleware, HomeRoute);
 app.use('/news', passwordAuthMiddleware, NewsRoute);
 
-app.use((err, req, res, next) => {
-    console.error("DEBUG ERROR:", err.stack); // This will show in your terminal!
-    res.status(500).json({ error: err.message });
-});
-
 module.exports = app;

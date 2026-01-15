@@ -28,10 +28,6 @@ tap.test('POST /users/signup with missing email', async (t) => {
     });
     t.equal(response.status, 400);
     t.end();
-
-    tap.before(async () => {
-        await UserModel.deleteOne({ email: mockUser.email });
-    });
 });
 
 tap.test('POST /users/signup', async (t) => { 
@@ -95,6 +91,7 @@ tap.test('Check PUT /users/preferences', async (t) => {
 // News tests
 
 tap.test('GET /news', async (t) => {
+    console.log("Token in news test:94", token);
     const response = await server.get('/news').set('Authorization', `Bearer ${token}`);
     t.equal(response.status, 200);
     t.hasOwnProp(response.body, 'news');
@@ -102,6 +99,7 @@ tap.test('GET /news', async (t) => {
 });
 
 tap.test('GET /news without token', async (t) => {
+    console.log("No token in news test:102");
     const response = await server.get('/news');
     t.equal(response.status, 401);
     t.end();
@@ -110,5 +108,4 @@ tap.test('GET /news without token', async (t) => {
 // After all tests are done
 tap.teardown(async () => {
     await mongoose.connection.close();
-    process.exit(0);
 });
