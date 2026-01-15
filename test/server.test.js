@@ -2,6 +2,7 @@ const tap = require('tap');
 const supertest = require('supertest');
 const app = require('../app');
 const server = supertest(app);
+const mongoose = require('mongoose');
 
 const mockUser = {
     name: 'Clark Kent',
@@ -12,13 +13,13 @@ const mockUser = {
 
 let token = '';
 
-// Auth tests
-
-tap.test('POST /users/signup', async (t) => { 
-    const response = await server.post('/users/signup').send(mockUser);
-    t.equal(response.status, 200);
-    t.end();
+tap.before(async () => {
+    if (mongoose.connection.readyState === 0) {
+        await mongoose.connect(process.env.DB_URL);
+    }
 });
+
+// Auth tests
 
 tap.test('POST /users/signup with missing email', async (t) => {
     const response = await server.post('/users/signup').send({
@@ -28,6 +29,13 @@ tap.test('POST /users/signup with missing email', async (t) => {
     t.equal(response.status, 400);
     t.end();
 });
+
+tap.test('POST /users/signup', async (t) => { 
+    const response = await server.post('/users/signup').send(mockUser);
+    t.equal(response.status, 200);
+    t.end();
+});
+
 
 tap.test('POST /users/login', async (t) => { 
     const response = await server.post('/users/login').send({
@@ -70,6 +78,7 @@ tap.test('PUT /users/preferences', async (t) => {
         preferences: ['movies', 'comics', 'games']
     });
     t.equal(response.status, 200);
+    t.end();
 });
 
 tap.test('Check PUT /users/preferences', async (t) => {
@@ -82,6 +91,7 @@ tap.test('Check PUT /users/preferences', async (t) => {
 // News tests
 
 tap.test('GET /news', async (t) => {
+    console.log("Token in news test:94", token);
     const response = await server.get('/news').set('Authorization', `Bearer ${token}`);
     t.equal(response.status, 200);
     t.hasOwnProp(response.body, 'news');
@@ -89,13 +99,13 @@ tap.test('GET /news', async (t) => {
 });
 
 tap.test('GET /news without token', async (t) => {
+    console.log("No token in news test:102");
     const response = await server.get('/news');
     t.equal(response.status, 401);
     t.end();
 });
 
-
-
-tap.teardown(() => {
-    process.exit(0);
+// After all tests are done
+tap.teardown(async () => {
+    await mongoose.connection.close();
 });
